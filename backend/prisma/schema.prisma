@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Merchant {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  password    String
+  name        String
+  apiKey      String    @unique @default(uuid())
+  webhookUrl  String?
+  createdAt   DateTime  @default(now())
+  payments    Payment[]
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  merchantId      String
+  merchant        Merchant      @relation(fields: [merchantId], references: [id])
+  amount          Float
+  currency        String        @default("USDC")
+  localCurrency   String        @default("USD")
+  localAmount     Float
+  fxRate          Float
+  stellarAddress  String
+  memo            String        @unique
+  status          PaymentStatus @default(PENDING)
+  txHash          String?
+  webhookSent     Boolean       @default(false)
+  description     String?
+  paymentLink     String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  webhookLogs     WebhookLog[]
+}
+
+model WebhookLog {
+  id         String   @id @default(uuid())
+  paymentId  String
+  payment    Payment  @relation(fields: [paymentId], references: [id])
+  url        String
+  payload    Json
+  statusCode Int?
+  success    Boolean
+  createdAt  DateTime @default(now())
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  EXPIRED
+  FAILED
+}

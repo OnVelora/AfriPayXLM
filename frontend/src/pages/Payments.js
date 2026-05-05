@@ -1,0 +1,18 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useState, useEffect } from 'react';
+import api from '../api';
+import CreatePaymentModal from '../components/CreatePaymentModal';
+export default function Payments() {
+    const [payments, setPayments] = useState([]);
+    const [page, setPage] = useState(1);
+    const [pages, setPages] = useState(1);
+    const [status, setStatus] = useState('');
+    const [showCreate, setShowCreate] = useState(false);
+    function load() {
+        api.get(`/payments?page=${page}&limit=20${status ? `&status=${status}` : ''}`)
+            .then(({ data }) => { setPayments(data.payments); setPages(data.pages); });
+    }
+    useEffect(load, [page, status]);
+    function copyLink(link) { navigator.clipboard.writeText(link); }
+    return (_jsxs("div", { children: [_jsxs("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }, children: [_jsx("h1", { className: "page-title", style: { margin: 0 }, children: "Payments" }), _jsxs("div", { style: { display: 'flex', gap: '0.75rem' }, children: [_jsxs("select", { value: status, onChange: (e) => { setStatus(e.target.value); setPage(1); }, style: { width: 'auto' }, children: [_jsx("option", { value: "", children: "All Status" }), ['PENDING', 'COMPLETED', 'EXPIRED', 'FAILED'].map((s) => _jsx("option", { value: s, children: s }, s))] }), _jsx("button", { className: "btn btn-primary", onClick: () => setShowCreate(true), children: "+ New Payment" })] })] }), _jsx("div", { className: "card", style: { padding: 0, overflow: 'hidden' }, children: _jsxs("table", { children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { children: "ID" }), _jsx("th", { children: "Amount" }), _jsx("th", { children: "Local" }), _jsx("th", { children: "Status" }), _jsx("th", { children: "Tx Hash" }), _jsx("th", { children: "Date" }), _jsx("th", { children: "Link" })] }) }), _jsxs("tbody", { children: [payments.length === 0 && (_jsx("tr", { children: _jsx("td", { colSpan: 7, style: { textAlign: 'center', color: 'var(--muted)', padding: '2rem' }, children: "No payments found" }) })), payments.map((p) => (_jsxs("tr", { children: [_jsxs("td", { style: { fontFamily: 'monospace', fontSize: '0.8rem' }, children: [p.id.slice(0, 8), "\u2026"] }), _jsxs("td", { children: [p.amount, " USDC"] }), _jsxs("td", { children: [p.localAmount, " ", p.localCurrency] }), _jsx("td", { children: _jsx("span", { className: `badge badge-${p.status.toLowerCase()}`, children: p.status }) }), _jsx("td", { style: { fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--muted)' }, children: p.txHash ? `${p.txHash.slice(0, 10)}…` : '—' }), _jsx("td", { style: { color: 'var(--muted)' }, children: new Date(p.createdAt).toLocaleDateString() }), _jsx("td", { children: p.paymentLink && (_jsx("button", { className: "btn btn-outline", style: { padding: '0.3rem 0.6rem', fontSize: '0.75rem' }, onClick: () => copyLink(p.paymentLink), children: "Copy" })) })] }, p.id)))] })] }) }), pages > 1 && (_jsxs("div", { style: { display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem' }, children: [_jsx("button", { className: "btn btn-outline", disabled: page === 1, onClick: () => setPage(page - 1), children: "Prev" }), _jsxs("span", { style: { padding: '0.6rem', color: 'var(--muted)' }, children: [page, " / ", pages] }), _jsx("button", { className: "btn btn-outline", disabled: page === pages, onClick: () => setPage(page + 1), children: "Next" })] })), showCreate && _jsx(CreatePaymentModal, { onClose: () => { setShowCreate(false); load(); } })] }));
+}
